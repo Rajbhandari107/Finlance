@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finlance AI - Smart Freelancer Finance</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --accent: #4895ef;
+            --light: #f8f9fa;
+            --dark: #212529;
+        }
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background-color: #f5f7fb;
+            color: var(--dark);
+        }
+        .header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            border-radius: 0 0 1rem 1rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        .stat-card {
+            background: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            transition: transform 0.2s;
+        }
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+        .stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        .dashboard-card {
+            background: white;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+        .nav-tabs .nav-link {
+            color: var(--dark);
+            font-weight: 500;
+        }
+        .nav-tabs .nav-link.active {
+            color: var(--primary);
+            font-weight: 600;
+        }
+        .btn-primary {
+            background-color: var(--primary);
+            border-color: var(--primary);
+        }
+        .invoice-status {
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        .status-pending {
+            background-color: #fff3cd;
+            color: #856404;
+        }
+        .status-paid {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .status-overdue {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .ai-assistant-card {
+            background: linear-gradient(135deg, #f5f7ff, #e6f0ff);
+            border-left: 4px solid var(--accent);
+        }
+        @media (max-width: 768px) {
+            .stat-card {
+                margin-bottom: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid px-4">
+        <div class="header text-center">
+            <h1><i class="bi bi-robot"></i> Finlance AI</h1>
+            <p class="lead">Your intelligent finance assistant for freelancers</p>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-label">Total Income</div>
+                    <div class="stat-value">${{ "{:,.2f}".format(total_income) }}</div>
+                    <small class="text-muted">All time</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-label">Estimated Tax</div>
+                    <div class="stat-value">${{ "{:,.2f}".format(estimated_tax) }}</div>
+                    <small class="text-muted">Based on profit</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-label">Net Income</div>
+                    <div class="stat-value">${{ "{:,.2f}".format(total_income - estimated_tax) }}</div>
+                    <small class="text-muted">After tax</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card">
+                    <div class="stat-label">Expenses</div>
+                    <div class="stat-value">${{ "{:,.2f}".format(total_expenses) }}</div>
+                    <small class="text-muted">Tax deductible</small>
+                </div>
+            </div>
+        </div>
+        
+        <ul class="nav nav-tabs tabs" id="myTab" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="dashboard-tab" data-bs-toggle="tab" data-bs-target="#dashboard" type="button" role="tab">Dashboard</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="clients-tab" data-bs-toggle="tab" data-bs-target="#clients" type="button" role="tab">Clients</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="income-tab" data-bs-toggle="tab" data-bs-target="#income" type="button" role="tab">Income</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="invoices-tab" data-bs-toggle="tab" data-bs-target="#invoices" type="button" role="tab">Invoices</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="ai-tab" data-bs-toggle="tab" data-bs-target="#ai" type="button" role="tab">AI Assistant</button>
+            </li>
+        </ul>
+        
+        <div class="tab-content" id="myTabContent">
+            <!-- Dashboard Tab -->
+            <div class="tab-pane fade show active" id="dashboard" role="tabpanel">
+                <div class="row mt-4">
+                    <div class="col-md-6">
+                        <div class="dashboard-card">
+                            <h4><i class="bi bi-graph-up"></i> Income Overview</h4>
+                            <canvas id="incomeChart" height="200"></canvas>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="dashboard-card">
+                            <h4><i class="bi bi-cash-stack"></i> Recent Income</h4>
+                            <div class="table-responsive">
+                                <table class="table">
+                                    <thead>
+                                        <tr>
+                                            <th>Client</th>
+                                            <th>Description</th>
+                                            <th>Amount</th>
+                                            <th>Date</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for item in income[-5:]|reverse %}
+                                        <tr>
+                                            <td>{{ item.client_name }}</td>
+                                            <td>{{ item.description }}</td>
+                                            <td>${{ "{:,.2f}".format(item.amount) }}</td>
+                                            <td>{{ item.date }}</td>
+                                        </tr>
+                                        {% else %}
+                                        <tr>
+                                            <td colspan="4" class="text-center">No income recorded yet</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Clients Tab -->
+            <div class="tab-pane fade" id="clients" role="tabpanel">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4><i class="bi bi-people-fill"></i> Clients</h4>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addClientModal">
+                        <i class="bi bi-plus-lg"></i> Add Client
+                    </button>
+                </div>
+                
+                <div class="dashboard-card">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Date Added</th>
+                                    <th>Total Income</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for client in clients %}
+                                <tr>
+                                    <td>{{ client.name }}</td>
+                                    <td>{{ client.email }}</td>
+                                    <td>{{ client.created_at }}</td>
+                                    <td>${{ "{:,.2f}".format(income|selectattr('client_id', 'equalto', client.id)|map(attribute='amount')|sum) }}</td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="4" class="text-center">No clients added yet</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Income Tab -->
+            <div class="tab-pane fade" id="income" role="tabpanel">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4><i class="bi bi-cash-coin"></i> Income Tracking</h4>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addIncomeModal">
+                        <i class="bi bi-plus-lg"></i> Add Income
+                    </button>
+                </div>
+                
+                <div class="dashboard-card">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Client</th>
+                                    <th>Description</th>
+                                    <th>Amount</th>
+                                    <th>Date</th>
+                                    <th>Invoiced</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in income|reverse %}
+                                <tr>
+                                    <td>{{ item.client_name }}</td>
+                                    <td>{{ item.description }}</td>
+                                    <td>${{ "{:,.2f}".format(item.amount) }}</td>
+                                    <td>{{ item.date }}</td>
+                                    <td>
+                                        {% if invoices|selectattr('items', 'defined')|map(attribute='items')|sum(start=[])|map(attribute='id')|select('equalto', item.id)|list %}
+                                            <span class="badge bg-success">Yes</span>
+                                        {% else %}
+                                            <span class="badge bg-warning text-dark">No</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="5" class="text-center">No income recorded yet</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Invoices Tab -->
+            <div class="tab-pane fade" id="invoices" role="tabpanel">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4><i class="bi bi-receipt"></i> Invoices</h4>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#generateInvoiceModal">
+                        <i class="bi bi-file-earmark-plus"></i> Generate Invoice
+                    </button>
+                </div>
+                
+                <div class="dashboard-card">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Client</th>
+                                    <th>Amount</th>
+                                    <th>Date</th>
+                                    <th>Due Date</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for invoice in invoices|reverse %}
+                                <tr>
+                                    <td>{{ invoice.client_name }}</td>
+                                    <td>${{ "{:,.2f}".format(invoice.amount) }}</td>
+                                    <td>{{ invoice.date }}</td>
+                                    <td>{{ invoice.due_date }}</td>
+                                    <td>
+                                        {% set due_date = datetime.strptime(invoice.due_date, '%Y-%m-%d').date() %}
+                                        {% set today = datetime.now().date() %}
+                                        {% if invoice.status == 'paid' %}
+                                            <span class="invoice-status status-paid">PAID</span>
+                                        {% elif today > due_date %}
+                                            <span class="invoice-status status-overdue">OVERDUE</span>
+                                        {% else %}
+                                            <span class="invoice-status status-pending">PENDING</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('download_invoice', invoice_id=invoice.id) }}" class="btn btn-sm btn-outline-primary">
+                                            <i class="bi bi-download"></i> PDF
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% else %}
+                                <tr>
+                                    <td colspan="6" class="text-center">No invoices generated yet</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- AI Assistant Tab -->
+            <div class="tab-pane fade" id="ai" role="tabpanel">
+                <div class="dashboard-card ai-assistant-card">
+                    <h4><i class="bi bi-robot"></i> Finance Assistant</h4>
+                    <p>Ask me anything about managing your freelance finances</p>
+                    
+                    <div id="chatContainer" style="height: 300px; overflow-y: auto; margin-bottom: 1rem; border: 1px solid #dee2e6; border-radius: 0.375rem; padding: 1rem;">
+                        <div class="chat-message ai-message mb-3 p-3 bg-light rounded">
+                            <strong>FinAI:</strong> Hi there! I'm your freelance finance assistant. How can I help you today? You can ask me about:
+                            <ul>
+                                <li>Writing professional invoice descriptions</li>
+                                <li>Tax optimization strategies</li> 
+                                <li>Tracking expenses</li>
+                                <li>Setting your rates</li>
+                                <li>Financial planning</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="chatInput" placeholder="Type your question...">
+                        <button class="btn btn-primary" onclick="sendMessage()">
+                            <i class="bi bi-send"></i> Send
+                        </button>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <small class="text-muted">Examples: "How can I reduce my taxes?", "Help me write an invoice description for web design work", "What's a good rate for a freelance developer?"</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Modals (same as before but with AI enhancements) -->
+        <!-- Add Client Modal -->
+        <div class="modal fade" id="addClientModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Add New Client</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form action="{{ url_for('add_client') }}" method="post">
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label">Client Name</label>
+                                <input type="text" class="form-control" name="name" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-control" name="email" required>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Add Client</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Add Income Modal -->
+        <div class="modal fade" id="addIncomeModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Add Income</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form action="{{ url_for('add_income') }}" method="post">
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label">Client</label>
+                                <select class="form-select" name="client_id" required>
+                                    <option value="" selected disabled>Select a client</option>
+                                    {% for client in clients %}
+                                    <option value="{{ client.id }}">{{ client.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Description</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="incomeDescription" name="description" required>
+                                    <button class="btn btn-outline-secondary" type="button" onclick="suggestDescription()">
+                                        <i class="bi bi-magic"></i> AI Suggest
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Amount ($)</label>
+                                <input type="number" step="0.01" class="form-control" name="amount" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Date</label>
+                                <input type="date" class="form-control" name="date" required>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Add Income</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Generate Invoice Modal -->
+        <div class="modal fade" id="generateInvoiceModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Generate New Invoice</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="invoiceForm">
+                            <div class="mb-3">
+                                <label for="clientSelect" class="form-label">Client</label>
+                                <select class="form-select" id="clientSelect" required>
+                                    <option value="">Select a client</option>
+                                    {% for client in clients %}
+                                    <option value="{{ client.id }}">{{ client.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Income Items to Include</label>
+                                <div class="list-group">
+                                    {% for item in income %}
+                                    <div class="list-group-item">
+                                        <input class="form-check-input me-1" type="checkbox" 
+                                               name="items" value="{{ item.id }}" id="item-{{ item.id }}">
+                                        <label class="form-check-label" for="item-{{ item.id }}">
+                                            {{ item.description }} - ${{ "%.2f"|format(item.amount) }} ({{ item.date }})
+                                        </label>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-primary" id="generateInvoiceBtn">Generate Invoice</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+        document.getElementById('generateInvoiceBtn').addEventListener('click', async function() {
+            const clientId = document.getElementById('clientSelect').value;
+            const checkboxes = document.querySelectorAll('input[name="items"]:checked');
+            const items = Array.from(checkboxes).map(cb => cb.value);
+            
+            if (!clientId || items.length === 0) {
+                alert('Please select a client and at least one income item');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/generate_invoice', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams({
+                        client_id: clientId,
+                        'items[]': items
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    alert('Invoice generated successfully!');
+                    window.location.reload();
+                } else {
+                    alert('Error: ' + result.error);
+                }
+            } catch (error) {
+                alert('Failed to generate invoice: ' + error.message);
+            }
+        });
+        </script>
+        
+        <div class="footer text-center mt-5 mb-4">
+            <p class="text-muted">Finlance AI - Smart Finance for Freelancers</p>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+    <script>
+        // Initialize charts with real data
+        const incomeCtx = document.getElementById('incomeChart').getContext('2d');
+        
+        try {
+            // Group income by month
+            const monthlyIncome = {};
+            const incomeData = JSON.parse('{{ income|tojson|safe }}');
+            
+            // Validate and process income data
+            if (Array.isArray(incomeData)) {
+                incomeData.forEach(item => {
+                    if (item && item.date && item.amount) {
+                        const date = new Date(item.date);
+                        if (!isNaN(date)) {
+                            const month = date.toLocaleString('default', {month: 'short'});
+                            monthlyIncome[month] = (monthlyIncome[month] || 0) + parseFloat(item.amount);
+                        }
+                    }
+                });
+            } else {
+                console.error('Income data is not an array');
+            }
+        } catch (error) {
+            console.error('Error processing income data:', error);
+        }
+        
+        const incomeChart = new Chart(incomeCtx, {
+            type: 'bar',
+            data: {
+                labels: Object.keys(monthlyIncome),
+                datasets: [{
+                    label: 'Monthly Income',
+                    data: Object.values(monthlyIncome),
+                    backgroundColor: '#4361ee',
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+        
+        // Chat Functions
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            if (!message) return;
+            
+            // Add user message to chat
+            addMessage('user', message);
+            input.value = '';
+            
+            try {
+                const response = await fetch('/ai/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: message
+                    }),
+                });
+                
+                const result = await response.json();
+                addMessage('ai', result.response);
+            } catch (error) {
+                addMessage('ai', "Sorry, I'm having trouble connecting to the AI service. Please try again later.");
+                console.error('Chat error:', error);
+            }
+        }
+        
+        function addMessage(sender, text) {
+            const chatContainer = document.getElementById('chatContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chat-message ${sender}-message mb-3 p-3 rounded`;
+            
+            if (sender === 'user') {
+                messageDiv.classList.add('bg-primary', 'text-white');
+                messageDiv.innerHTML = `<strong>You:</strong> ${text}`;
+            } else {
+                messageDiv.classList.add('bg-light');
+                messageDiv.innerHTML = `<strong>FinAI:</strong> ${text}`;
+            }
+            
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+        
+        // Handle Enter key in chat input
+        document.getElementById('chatInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+        
+        // Update suggestDescription to use chat
+        function suggestDescription() {
+            const clientSelect = document.querySelector('#addIncomeModal select[name="client_id"]');
+            const clientName = clientSelect.options[clientSelect.selectedIndex].text;
+            const descriptionField = document.getElementById('incomeDescription');
+            
+            addMessage('user', `Help me write a professional description for services provided to ${clientName}`);
+            
+            fetch('/ai/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    message: `Generate a professional description for services provided to ${clientName}`
+                }),
+            })
+            .then(response => response.json())
+            .then(result => {
+                descriptionField.value = result.response;
+                addMessage('ai', result.response);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                descriptionField.value = `Professional services for ${clientName}`;
+            });
+        }
+    </script>
+</body>
+</html>
